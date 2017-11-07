@@ -1,0 +1,32 @@
+html, body{
+    height: 100%;
+}
+
+body{
+    display: flex;
+}
+
+.my-container{
+    /*width: 25rem;*/
+    /*height: 25rem;*/
+    /*border: 2px solid red;*/
+    margin: auto;
+}
+
+li{
+    margin: 0.2rem;
+    padding: 0 0.8rem;
+    height: 1.7rem;
+    line-height: 1.7rem;
+    list-style-type: none;
+}
+
+li:hover{
+    border-radius: 1rem;
+    background-color: aquamarine;
+    cursor: default;
+}
+
+ul{
+    padding: 0;
+}
