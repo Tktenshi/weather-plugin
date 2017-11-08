@@ -2,21 +2,24 @@ window.jQuery = require("jquery");
 
 const myButton = jQuery("button")[0];
 myButton.addEventListener("click", function () {
-    jQuery("ul").myPlugin();
+    jQuery("ul").myPlugin({direction:"down"});
 });
 
 
 (function ($) {
-    let params = {cities: ["Ivanovo", "Moscow", "Los Angeles", "London", "Brooklyn", "Amsterdam", "Narnia"]};
+    let params = {
+        cities: ["Ivanovo", "Moscow", "Los Angeles", "London", "Brooklyn", "Amsterdam", "Narnia"],
+        direction: "up"
+    };
 
     const methods = {
         init: function (options) {
             $.extend(params, options);
 
-            const list = this.children();
+            let list = this.children();
 
             getWeather();
-            initAnimation();
+            jQuery.proxy(initAnimation, this)();
 
             function getWeather() {
                 const search = () => {
@@ -41,8 +44,6 @@ myButton.addEventListener("click", function () {
                         console.log(response);
                         list[obj.li_id].innerHTML += " " + Math.round(response.main.temp) + "&#176;";
                     });
-
-                // $(list[i]).css("background-color", "green");
 
                 function send(aTown, aQuery, aParams, callback) {
                     const xhr = new XMLHttpRequest();
@@ -78,9 +79,14 @@ myButton.addEventListener("click", function () {
             }
 
             function initAnimation() {
+                const contlisst = this;
                 $(document).ready(function () {
-                    $(list).on("click", function () {
-                        console.log(this);
+                    list.on("click", function () {
+                        let list = contlisst.children();
+                        params.direction === "up" ? $(this).insertBefore(list[0]) : $(this).insertAfter(list[list.length-1]);
+
+                        // console.log(list);
+                        $(this).css("background-color", "green");
                     })
                 })
             }
