@@ -2,18 +2,26 @@ window.jQuery = require("jquery");
 
 const myButton = jQuery("button")[0];
 myButton.addEventListener("click", function () {
-    jQuery("ul").myPlugin({direction:"down"});
+    jQuery("ul").myPlugin();
+    // jQuery("ul").myPlugin({cities: ["Ivanovo", "Moscow"]});
+    // jQuery("ul").myPlugin({direction: "down"});
 });
 
 
 (function ($) {
-    let params = {
+    const getDefaultParams = () => ({
         cities: ["Ivanovo", "Moscow", "Los Angeles", "London", "Brooklyn", "Amsterdam", "Narnia"],
         direction: "up"
-    };
+    });
+
+    let params = getDefaultParams();
+    let iniUl;
 
     const methods = {
         init: function (options) {
+            methods.destroy.call(this);
+
+            iniUl = this.html();
             $.extend(params, options);
 
             let list = this.children();
@@ -41,61 +49,91 @@ myButton.addEventListener("click", function () {
                 const obj = search();
                 if (obj)
                     send(params.cities[obj.city_id], query, qParams, function (response) {
-                        console.log(response);
                         list[obj.li_id].innerHTML += " " + Math.round(response.main.temp) + "&#176;";
                     });
 
                 function send(aTown, aQuery, aParams, callback) {
-                    const xhr = new XMLHttpRequest();
-                    xhr.open("GET", "http://api.openweathermap.org/data/2.5/" + aQuery + "?q=" + encodeURIComponent(aTown) + "&units=metric" + aParams + appId);
-
-                    xhr.onreadystatechange = function () {
-                        if (xhr.readyState !== 4) return;
-
-                        console.log("Done!");
-
-                        if (xhr.status !== 200) {
-                            console.log(xhr.status + ": " + xhr.statusText);
-                            if (xhr.status === 404) {
-                                console.log("The city is not found");
+                    $.get("http://api.openweathermap.org/data/2.5/" + aQuery + "?q=" + encodeURIComponent(aTown) + "&units=metric" + aParams + appId)
+                        .done(function (data) {
+                            callback(data)
+                        })
+                        .fail(function (err) {
+                            console.log(err.status + ": " + err.statusText);
+                            switch (err.status) {
+                                case 404:
+                                    console.log("The city is not found");
+                                    break;
+                                case 401:
+                                    console.log("The function is paid and therefore temporarily unavailable");
+                                    break;
+                                default:
+                                    console.log("Temporary problems, please try again later");
                             }
-                            else {
-                                if (xhr.status === 401) console.log("The function is paid and therefore temporarily unavailable");
-                                else console.log("Temporary problems, please try again later");
-                            }
-
-                        } else {
-                            callback(JSON.parse(xhr.responseText));
-                        }
-                    };
-
-                    xhr.timeout = 60000;
-                    xhr.ontimeout = function () {
-                        console.log('Извините, запрос превысил максимальное время');
-                    };
-
-                    xhr.send();
+                        })
                 }
             }
 
             function initAnimation() {
-                const contlisst = this;
+                const contList = this;
                 $(document).ready(function () {
-                    list.on("click", function () {
-                        let list = contlisst.children();
-                        params.direction === "up" ? $(this).insertBefore(list[0]) : $(this).insertAfter(list[list.length-1]);
+                    if (params.direction === "up") {
+                        let animationIsEnd = true;
+                        list.on("click", function () {
+                            if (animationIsEnd) {
+                                animationIsEnd = false;
+                                const list = contList.children();
+                                const el = $(this);
+                                const i = $.inArray(el[0], list);
+                                const marg = Math.min(parseInt(el.css("marginBottom")), parseInt(el.css("marginTop")));
+                                const dur = 500;
 
-                        // console.log(list);
-                        $(this).css("background-color", "green");
-                    })
+                                list.css("position", "relative");
+                                el.animate({"margin-left": "-=" + el.width() / 2 + "px"}, dur, function () {
+                                    const delay = dur / i;
+                                    for (let k = i - 1, pause = 0; k >= 0; k--, pause += delay) {
+                                        $(list[k]).delay(pause).animate({"top": "+=" + (el.outerHeight(true) - marg) + "px"}, delay);
+                                    }
+                                });
+                                el.animate({"top": "-=" + ((el.outerHeight(true) - marg) * i) + "px"}, dur);
+                                el.animate({"margin-left": "+=" + el.width() / 2 + "px"}, dur, function () {
+                                    list.css({"position": "", "margin-left": "", "top": ""});
+                                    el.insertBefore(list[0]);
+                                    animationIsEnd = true;
+                                });
+                            }
+                        })
+
+                    }
+                    else {
+                        let animationIsEnd = true;
+                        list.on("click", function () {
+                            if (animationIsEnd) {
+                                animationIsEnd = false;
+                                const el = $(this);
+                                const list = contList.children();
+
+                                el.slideUp(function () {
+                                    el.insertAfter(list[list.length - 1]).slideDown(function () {
+                                        animationIsEnd = true;
+                                    });
+                                });
+                            }
+                        });
+                    }
                 })
+            }
+        },
+        destroy: function () {
+            params = getDefaultParams();
+            if (iniUl) {
+                this.html(iniUl);
             }
         }
     };
 
     $.fn.myPlugin = function (method) {
         if (methods[method]) {
-            return methods[methods].apply(this, Array.protype.slise.call(arguments, 1));
+            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
 
         } else if (typeof method === "object" || !method) {
             return methods.init.apply(this, arguments);

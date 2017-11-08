@@ -23,8 +23,8 @@ li{
 
 li:hover{
     border-radius: 1rem;
-    background-color: aquamarine;
-    cursor: default;
+    background-color: rgba(127, 255, 212, 0.7);
+    cursor: pointer;
 }
 
 ul{
