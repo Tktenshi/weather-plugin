@@ -53,7 +53,7 @@ myButton.addEventListener("click", function () {
                     });
 
                 function send(aTown, aQuery, aParams, callback) {
-                    $.get("http://api.openweathermap.org/data/2.5/" + aQuery + "?q=" + encodeURIComponent(aTown) + "&units=metric" + aParams + appId)
+                    $.get("https://api.openweathermap.org/data/2.5/" + aQuery + "?q=" + encodeURIComponent(aTown) + "&units=metric" + aParams + appId)
                         .done(function (data) {
                             callback(data)
                         })
